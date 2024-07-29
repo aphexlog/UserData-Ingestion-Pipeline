@@ -22,3 +22,6 @@ var/
 # Python Installer
 .venv/
 venv/
+
+# node dependencies
+node_modules/
