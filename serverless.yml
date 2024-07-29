@@ -33,6 +33,8 @@ functions:
     environment:
       KINESIS_STREAM_NAME:
         Ref: UserDataIngestionStream
+    layers:
+      - { Ref: PythonRequirementsLambdaLayer }
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -47,6 +49,8 @@ functions:
     environment:
       S3_BUCKET_NAME:
         Ref: UserDataIngestionBucket
+    layers:
+      - { Ref: PythonRequirementsLambdaLayer }
     iamRoleStatements:
       - Effect: Allow
         Action:

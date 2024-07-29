@@ -1,8 +1,12 @@
 import json
 import boto3
 from os import environ
+from mypy_boto3_s3 import S3Client
+from aws_lambda_powertools import Logger
 
-s3_client = boto3.client("s3")
+logger: Logger = Logger(service="consumer")
+
+s3_client: S3Client = boto3.client("s3") # type: ignore
 
 def lambda_handler(event, context):
     for record in event["Records"]:
@@ -16,6 +20,7 @@ def lambda_handler(event, context):
                 Key=file_name,
                 Body=json.dumps(payload)
             )
+            logger.info(f"Data stored in S3: {payload}")
 
     return {
         "statusCode": 200,
