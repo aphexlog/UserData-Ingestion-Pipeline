@@ -1,12 +1,57 @@
-# "org" ensures this Service is used with the correct Serverless Framework Access Key.
 org: aphexlog
-# "service" is the name of this project. This will also be added to your AWS resource names.
 service: UserData-Ingestion-Pipeline
 
 provider:
   name: aws
   runtime: python3.12
 
+plugins:
+  - serverless-python-requirements
+  - serverless-iam-roles-per-function
+
 functions:
-  hello:
-    handler: handler.hello
+  producer:
+    handler: producer.lambda_handler
+    environment:
+      KINESIS_STREAM_NAME:
+        Ref: UserDataIngestionStream
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - kinesis:PutRecord
+          - kinesis:PutRecords
+        Resource:
+          Fn::GetAtt:
+            - UserDataIngestionStream
+            - Arn
+  consumer:
+    handler: consumer.lambda_handler
+    environment:
+      S3_BUCKET_NAME:
+        Ref: UserDataIngestionBucket
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - s3:PutObject
+        Resource:
+          Fn::Join:
+            - ""
+            - - "arn:aws:s3:::"
+              - Ref: UserDataIngestionBucket
+              - "/*"
+
+resources:
+  Resources:
+    UserDataIngestionStream:
+      Type: AWS::Kinesis::Stream
+      Properties:
+        Name: ${self:service}-${self:provider.stage}-stream
+        ShardCount: 1
+    UserDataIngestionBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:service}-${self:provider.stage}-bucket
+        AccessControl: Private
+        Tags:
+          - Key: Name
+            Value: ${self:service}-${self:provider.stage}-bucket
