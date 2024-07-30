@@ -30,6 +30,10 @@ package:
 functions:
   producer:
     handler: userdata-ingestion-pipeline.producer.lambda_handler
+    timeout: 30
+    events:
+      - schedule:
+          rate: rate(1 minute)
     environment:
       KINESIS_STREAM_NAME:
         Ref: UserDataIngestionStream
@@ -46,6 +50,16 @@ functions:
             - Arn
   consumer:
     handler: userdata-ingestion-pipeline.consumer.lambda_handler
+    timeout: 30
+    events:
+      - stream:
+          type: kinesis
+          arn:
+            Fn::GetAtt:
+              - UserDataIngestionStream
+              - Arn
+          batchSize: 100
+          startingPosition: TRIM_HORIZON
     environment:
       S3_BUCKET_NAME:
         Ref: UserDataIngestionBucket
@@ -68,7 +82,8 @@ resources:
       Type: AWS::Kinesis::Stream
       Properties:
         Name: ${self:service}-${self:provider.stage}-stream
-        ShardCount: 1
+        StreamModeDetails:
+          StreamMode: ON_DEMAND
     UserDataIngestionBucket:
       Type: AWS::S3::Bucket
       Properties:
