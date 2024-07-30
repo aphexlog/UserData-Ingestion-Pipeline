@@ -1,31 +1,31 @@
 <!--
-title: 'AWS Python Example'
-description: 'This template demonstrates how to deploy a Python function running on AWS Lambda using the Serverless Framework.'
+title: 'AWS Python User Data Ingestion Pipeline'
+description: 'This template demonstrates how to deploy a Python-based user data ingestion pipeline running on AWS using the Serverless Framework. The data is sourced from https://randomuser.me.'
 layout: Doc
 framework: v4
 platform: AWS
 language: python
 priority: 2
-authorLink: 'https://github.com/serverless'
-authorName: 'Serverless, Inc.'
-authorAvatar: 'https://avatars1.githubusercontent.com/u/13742415?s=200&v=4'
+authorLink: 'https://github.com/Aphexlog'
+authorName: 'Aaron West'
+authorAvatar: ''
 -->
 
-# Serverless Framework AWS Python Example
+# Serverless Framework AWS Python User Data Ingestion Pipeline
 
-This template demonstrates how to deploy a Python function running on AWS Lambda using the Serverless Framework. The deployed function does not include any event definitions as well as any kind of persistence (database). For more advanced configurations check out the [examples repo](https://github.com/serverless/examples/) which includes integrations with SQS, DynamoDB or examples of functions that are triggered in `cron`-like manner. For details about configuration of specific `events`, please refer to our [documentation](https://www.serverless.com/framework/docs/providers/aws/events/).
+Welcome to the AWS Python User Data Ingestion Pipeline project! This template showcases how to deploy a robust and scalable data ingestion pipeline on AWS Lambda via the Serverless Framework. The pipeline sources user data from [RandomUser.me](https://randomuser.me), processes it through Kinesis Data Stream, and finally stores it in an S3 target bucket. For more advanced configurations, explore our [examples repo](https://github.com/serverless/examples/), which includes additional integrations with services like SQS, DynamoDB, or examples of event-triggered functions. For details about specific event configurations, please refer to our [documentation](https://www.serverless.com/framework/docs/providers/aws/events/).
 
 ## Usage
 
 ### Deployment
 
-In order to deploy the example, you need to run the following command:
+Deploying the pipeline is straightforward. Simply run the following command:
 
 ```
 serverless deploy
 ```
 
-After running deploy, you should see output similar to:
+After executing the deploy command, you should see an output akin to:
 
 ```
 Deploying "aws-python" to stage "dev" (us-east-1)
@@ -38,13 +38,13 @@ functions:
 
 ### Invocation
 
-After successful deployment, you can invoke the deployed function by using the following command:
+Post successful deployment, you can invoke the deployed function using this command:
 
 ```
 serverless invoke --function hello
 ```
 
-Which should result in response similar to the following:
+You should receive a response similar to:
 
 ```json
 {
@@ -55,13 +55,13 @@ Which should result in response similar to the following:
 
 ### Local development
 
-You can invoke your function locally by using the following command:
+For local testing and development, you can invoke your function locally via:
 
 ```
 serverless invoke local --function hello
 ```
 
-Which should result in response similar to the following:
+This command should yield a response similar to:
 
 ```
 {
@@ -72,10 +72,10 @@ Which should result in response similar to the following:
 
 ### Bundling dependencies
 
-In case you would like to include third-party dependencies, you will need to use a plugin called `serverless-python-requirements`. You can set it up by running the following command:
+In order to include third-party dependencies, you need to use the `serverless-python-requirements` plugin. Install it with the following command:
 
 ```
 serverless plugin install -n serverless-python-requirements
 ```
 
-Running the above will automatically add `serverless-python-requirements` to `plugins` section in your `serverless.yml` file and add it as a `devDependency` to `package.json` file. The `package.json` file will be automatically created if it doesn't exist beforehand. Now you will be able to add your dependencies to `requirements.txt` file (`Pipfile` and `pyproject.toml` is also supported but requires additional configuration) and they will be automatically injected to Lambda package during build process. For more details about the plugin's configuration, please refer to [official documentation](https://github.com/UnitedIncome/serverless-python-requirements).
+This command will automatically add `serverless-python-requirements` to the `plugins` section in your `serverless.yml` file and register it as a `devDependency` in the `package.json` file. If `package.json` does not exist, it will be generated for you. Now, you can specify your dependencies in the `requirements.txt` file (support for `Pipfile` and `pyproject.toml` is available with additional configuration) and they will be included in the Lambda package during the build process. More details about plugin configuration can be found in the [official documentation](https://github.com/UnitedIncome/serverless-python-requirements).
