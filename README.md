@@ -13,7 +13,7 @@ authorAvatar: ''
 
 # Serverless Framework AWS Python User Data Ingestion Pipeline
 
-Welcome to the AWS Python User Data Ingestion Pipeline project! This template showcases how to deploy a robust and scalable data ingestion pipeline on AWS Lambda via the Serverless Framework. The pipeline sources user data from [RandomUser.me](https://randomuser.me), processes it through Kinesis Data Stream, and finally stores it in an S3 target bucket. For more advanced configurations, explore our [examples repo](https://github.com/serverless/examples/), which includes additional integrations with services like SQS, DynamoDB, or examples of event-triggered functions. For details about specific event configurations, please refer to our [documentation](https://www.serverless.com/framework/docs/providers/aws/events/).
+This project shows you an easy way to set up a scalable data ingestion pipeline on AWS Lambda using the Serverless Framework. The pipeline grabs user data from [RandomUser.me](https://randomuser.me), processes it with Kinesis Data Stream, and stores it in an S3 bucket. If you want to explore different configurations, check out the official serverless [examples repo](https://github.com/serverless/examples/). It has additional integrations with services like SQS, DynamoDB, or event-triggered functions. For more detailed event configurations, take a look at the serverless [documentation](https://www.serverless.com/framework/docs/providers/aws/events/).
 
 ## Important Information
 
