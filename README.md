@@ -66,14 +66,14 @@ You should receive responses similar to:
 ```json
 {
   "statusCode": 200,
-  "body": "{\"message\": \"Producer function executed successfully!\"}"
+  "body": "{\"message\": \"User data sent to Kinesis stream\"}"
 }
 ```
 
 ```json
 {
   "statusCode": 200,
-  "body": "{\"message\": \"Consumer function executed successfully!\"}"
+  "body": "{\"message\": \"Data processed and stored successfully\"}"
 }
 ```
 
