@@ -48,9 +48,6 @@ functions:
           Fn::GetAtt:
             - UserDataIngestionStream
             - Arn
-    logGroup:
-      logGroupName: /aws/lambda/${self:service}-${self:provider.stage}-producer
-      retentionInDays: 14
   consumer:
     handler: userdata-ingestion-pipeline.consumer.lambda_handler
     timeout: 30
@@ -78,9 +75,6 @@ functions:
             - - "arn:aws:s3:::"
               - Ref: UserDataIngestionBucket
               - "/*"
-    logGroup:
-      logGroupName: /aws/lambda/${self:service}-${self:provider.stage}-consumer
-      retentionInDays: 14
 
 resources:
   Resources:
