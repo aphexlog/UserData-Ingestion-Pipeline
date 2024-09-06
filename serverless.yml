@@ -48,42 +48,20 @@ functions:
           Fn::GetAtt:
             - UserDataIngestionStream
             - Arn
-  consumer:
-    handler: userdata-ingestion-pipeline.consumer.lambda_handler
-    timeout: 30
-    events:
-      - stream:
-          type: kinesis
-          arn:
-            Fn::GetAtt:
-              - UserDataIngestionStream
-              - Arn
-          batchSize: 100
-          startingPosition: TRIM_HORIZON
-    environment:
-      S3_BUCKET_NAME:
-        Ref: UserDataIngestionBucket
-    layers:
-      - { Ref: PythonRequirementsLambdaLayer }
+
+  transformer:
+    handler: userdata-ingestion-pipeline.transformer.lambda_handler # Update with the correct transformer handler path
+    timeout: 60 # Adjust timeout if necessary
+    memorySize: 256 # Adjust memory size based on data volume
     iamRoleStatements:
       - Effect: Allow
         Action:
-          - s3:PutObject
+          - firehose:PutRecordBatch # Firehose needs to invoke this Lambda
         Resource:
-          Fn::Join:
-            - ""
-            - - "arn:aws:s3:::"
-              - Ref: UserDataIngestionBucket
-              - "/*"
+          - "*"
 
 resources:
   Resources:
-    UserDataIngestionStream:
-      Type: AWS::Kinesis::Stream
-      Properties:
-        Name: ${self:service}-${self:provider.stage}-stream
-        StreamModeDetails:
-          StreamMode: ON_DEMAND
     UserDataIngestionBucket:
       Type: AWS::S3::Bucket
       Properties:
@@ -92,3 +70,119 @@ resources:
         Tags:
           - Key: Name
             Value: ${self:service}-${self:provider.stage}-bucket
+    FirehoseLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/kinesisfirehose/${self:service}-${self:provider.stage}-firehose-logs
+        RetentionInDays: 14
+    FirehoseLogStream:
+      Type: AWS::Logs::LogStream
+      Properties:
+        LogGroupName:
+          Ref: FirehoseLogGroup
+        LogStreamName: FirehoseDeliveryStreamLogs
+    FireHoseRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - firehose.amazonaws.com
+              Action:
+                - sts:AssumeRole
+        Policies:
+          - PolicyName: FirehosePolicy
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - s3:AbortMultipartUpload
+                    - s3:GetBucketLocation
+                    - s3:GetObject
+                    - s3:ListBucket
+                    - s3:ListBucketMultipartUploads
+                    - s3:PutObject
+                  Resource:
+                    - Fn::GetAtt:
+                        - UserDataIngestionBucket
+                        - Arn
+                    - Fn::Join:
+                        - ""
+                        - - Fn::GetAtt:
+                              - UserDataIngestionBucket
+                              - Arn
+                          - "/*"
+                - Effect: Allow
+                  Action:
+                    - kinesis:DescribeStream
+                    - kinesis:GetShardIterator
+                    - kinesis:GetRecords
+                    - kinesis:ListStreams
+                    - kinesis:PutRecord
+                    - kinesis:PutRecords
+                  Resource:
+                    Fn::GetAtt:
+                      - UserDataIngestionStream
+                      - Arn
+                - Effect: Allow
+                  Action:
+                    - logs:PutLogEvents
+                  Resource:
+                    - Fn::GetAtt:
+                        - FirehoseLogGroup
+                        - Arn
+                    - Fn::Join:
+                        - ""
+                        - - Fn::GetAtt:
+                              - FirehoseLogGroup
+                              - Arn
+                          - ":*"
+                - Effect: Allow
+                  Action:
+                    - lambda:InvokeFunction
+                  Resource:
+                    - Fn::GetAtt:
+                        - TransformerLambdaFunction
+                        - Arn
+    UserDataIngestionStream:
+      Type: AWS::Kinesis::Stream
+      Properties:
+        Name: ${self:service}-${self:provider.stage}-stream
+        StreamModeDetails:
+          StreamMode: ON_DEMAND
+    FireHoseDeliveryStream:
+      Type: AWS::KinesisFirehose::DeliveryStream
+      Properties:
+        DeliveryStreamType: KinesisStreamAsSource
+        KinesisStreamSourceConfiguration:
+          KinesisStreamARN:
+            Fn::GetAtt: [UserDataIngestionStream, Arn]
+          RoleARN:
+            Fn::GetAtt:
+              - FireHoseRole
+              - Arn
+        ExtendedS3DestinationConfiguration:
+          BucketARN:
+            Fn::GetAtt: [UserDataIngestionBucket, Arn]
+          BufferingHints:
+            IntervalInSeconds: 60
+            SizeInMBs: 1
+          CompressionFormat: GZIP
+          RoleARN:
+            Fn::GetAtt: [FireHoseRole, Arn]
+          ProcessingConfiguration:
+            Enabled: true
+            Processors:
+              - Type: Lambda # Lambda transformation processor
+                Parameters:
+                  - ParameterName: LambdaArn
+                    ParameterValue:
+                      Fn::GetAtt: [TransformerLambdaFunction, Arn] # Reference the transformer Lambda function
+          CloudWatchLoggingOptions:
+            Enabled: true
+            LogGroupName: /aws/kinesisfirehose/${self:service}-${self:provider.stage}-firehose-logs
+            LogStreamName: FirehoseDeliveryStreamLogs
